@@ -28,12 +28,15 @@
                         <RowDefinition Height="1*" />
                         <RowDefinition Height="1*" />
                         <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
                     </Grid.RowDefinitions>
                     <Label Content="Nombre de points : " FontSize="14" FontFamily="Calibri"/>
-                    <TextBox x:Name="txtNombrePoints" Grid.Column="1" TextWrapping="Wrap" Text="50" HorizontalAlignment="Stretch" PreviewTextInput="NumberValidationTextBox" Margin="5" FontFamily="Calibri" FontSize="14" />
-                    <Button x:Name="btnGenererParcours" Grid.Row="1" Content="Générer parcours" HorizontalAlignment="Left" Margin="5" Padding="5"  Click="btnGenererParcours_Click" FontFamily="Calibri" FontSize="14" />
-                    <Label x:Name="lblValeurIndividu" Grid.Row="3" Content="Valeur de l'individu : " FontSize="14" FontFamily="Calibri" FontWeight="Bold"/>
-                    <Label x:Name="lblResultValeurIndividu" Grid.Row="3" Grid.Column="1" Content="-" FontSize="18" FontFamily="Calibri" FontWeight="Bold" Foreground="DarkRed"/>
+                    <TextBox x:Name="txtNombrePoints" Grid.Column="1" TextWrapping="Wrap" Text="10" HorizontalAlignment="Stretch" PreviewTextInput="NumberValidationTextBox" Margin="5" FontFamily="Calibri" FontSize="14" />
+                    <Button x:Name="btnGenererParcours" Grid.Row="1" Content="Générer parcours" HorizontalAlignment="Left" Margin="5" Padding="5"  Click="BtnGenererParcours_Click" FontFamily="Calibri" FontSize="14" />
+                    <Label Grid.Row="2" Content="Valeur de l'individu : " FontSize="14" FontFamily="Calibri" FontWeight="Bold"/>
+                    <Label x:Name="lblResultValeurIndividu" Grid.Row="2" Grid.Column="1" Content="-" FontSize="14" FontFamily="Calibri" FontWeight="Bold" Foreground="DarkRed"/>
+                    <Label Grid.Row="3" Content="Chronomètre : " FontSize="14" FontFamily="Calibri" FontWeight="Bold"/>
+                    <Label x:Name="lblChronometre" Grid.Row="3" Grid.Column="1" Content="-" FontSize="14" FontFamily="Calibri" FontWeight="Bold"/>
                 </Grid>
                 <Separator/>
                 <Label Content="Force Brute : " FontSize="18"  FontFamily="Calibri" FontWeight="Bold"/>
@@ -42,11 +45,19 @@
                         <ColumnDefinition Width="75" />
                         <ColumnDefinition Width="75" />
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="btnDemarrerForceBrute" Content="Démarrer" HorizontalAlignment="Left" Margin="5" Padding="5" FontFamily="Calibri" FontSize="14" Click="btnDemarrerForceBrute_Click" />
-                    <Button x:Name="btnArreterForceBrute" Grid.Column="1" Content="Arrêter" IsEnabled="False" HorizontalAlignment="Left" Margin="5" Padding="5" FontFamily="Calibri" FontSize="14" Click="btnArreterForceBrute_Click" />
+                    <Button x:Name="btnDemarrerForceBrute" Content="Démarrer" HorizontalAlignment="Left" Margin="5" Padding="5" FontFamily="Calibri" FontSize="14" Click="BtnDemarrerForceBrute_Click" />
+                    <Button x:Name="btnArreterForceBrute" Grid.Column="1" Content="Arrêter" IsEnabled="False" HorizontalAlignment="Left" Margin="5" Padding="5" FontFamily="Calibri" FontSize="14" Click="BtnArreterForceBrute_Click" />
                 </Grid>
                 <Separator/>
                 <Label Content="Algorithe Génétique : " FontSize="18"  FontFamily="Calibri" FontWeight="Bold"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="75" />
+                        <ColumnDefinition Width="75" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="btnDemarrerAlgoGenetique" Content="Démarrer" HorizontalAlignment="Left" Margin="5" Padding="5" FontFamily="Calibri" FontSize="14" Click="BtnDemarrerAlgoGenetique_Click" />
+                    <Button x:Name="btnArreterAlgoGenetique" Grid.Column="1" Content="Arrêter" IsEnabled="False" HorizontalAlignment="Left" Margin="5" Padding="5" FontFamily="Calibri" FontSize="14" Click="BtnArreterAlgoGenetique_Click" />
+                </Grid>
             </StackPanel>
         </Grid>
     </Page>

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
+using AlgoGenetiqueDemo.Outils;
 
 namespace AlgoGenetiqueDemo
 {
@@ -14,29 +13,24 @@ namespace AlgoGenetiqueDemo
     internal class VoyageurCommerce
     {
         /// <summary>
+        /// Nombre de points maximal qui peuvent être saisis.
+        /// </summary>
+        public const int NombrePointsMax = 1000;
+
+        /// <summary>
+        /// Distance minimale entre deux points de passage.
+        /// </summary>
+        public const int DistanceMinEntrePoints = 10;
+
+        /// <summary>
         /// Thread pour exécuter l'algo de force brute.
         /// </summary>
         private Thread threadForceBrute;
 
         /// <summary>
-        /// Nombre de points maximal qui peuvent être saisis.
+        /// Thread pour exécuter l'algo génétique.
         /// </summary>
-        public const int NOMBRE_POINTS_MAX = 1000;
-
-        /// <summary>
-        /// Distance minimale entre deux points de passage.
-        /// </summary>
-        public const int DISTANCE_MIN_ENTRE_POINTS = 10;
-
-        /// <summary>
-        /// Générateur de nombre aléatoire.
-        /// </summary>
-        private Random rand = new Random();
-
-        /// <summary>
-        /// Obtient ou définit un tableau contenant les points de passage du voyageur de commerce.
-        /// </summary>
-        public Point[] pointsPassage { get; set; }
+        private Thread threadAlgoGenetique;
 
         /// <summary>
         /// Meilleur individu retourné par le calcul courant.
@@ -44,25 +38,34 @@ namespace AlgoGenetiqueDemo
         private Individu meilleurIndividu;
 
         /// <summary>
-        /// Point de départ et d'arrivée du parcours.
+        /// Initialise une nouvelle instance de la classe <see cref="VoyageurCommerce"/>.
         /// </summary>
-        public Point Point0 => this.pointsPassage[0];
-
-        /// <summary>
-        /// Obtient le meilleur individu retourné par le calcul courant.
-        /// </summary>
-        public Individu MeilleurIndividu
+        /// <param name="nombrePoints">Nombre de points de passage à parcourir.</param>
+        /// <param name="xMin">Valeur minimale de la position X du point.</param>
+        /// <param name="xMax">Valeur maximale de la position X du point.</param>
+        /// <param name="yMin">Valeur minimale de la position Y du point.</param>
+        /// <param name="yMax">Valeur maximale de la position Y du point.</param>
+        public VoyageurCommerce(int nombrePoints, int xMin, int xMax, int yMin, int yMax)
         {
-            get { return this.meilleurIndividu; }
-            set
-            {
-                this.meilleurIndividu = value;
-                EventHandler<EventArgs> raiseEvent = UpdateMeilleurIndividu;
+            this.Rand = new Random();
 
-                if (raiseEvent != null)
+            this.PointsPassage = new Point[nombrePoints];
+
+            for (int i = 0; i < nombrePoints; i++)
+            {
+                int x;
+                int y;
+                Point nouveauPoint;
+
+                do
                 {
-                    raiseEvent(this, new EventArgs());
+                    x = this.Rand.Next(xMin, xMax);
+                    y = this.Rand.Next(yMin, yMax);
+                    nouveauPoint = new Point(x, y);
                 }
+                while (this.PointsPassage.Any(point => point.Distance(nouveauPoint) < DistanceMinEntrePoints));
+
+                this.PointsPassage[i] = new Point(x, y);
             }
         }
 
@@ -77,31 +80,39 @@ namespace AlgoGenetiqueDemo
         public event EventHandler<EventArgs> FinDeCalcul;
 
         /// <summary>
-        /// Initialise une instance de la classe VoyageurCommerce.
+        /// Obtient le générateur de nombre aléatoire.
         /// </summary>
-        /// <param name="nombrePoints">Nombre de points de passage à parcourir.</param>
-        /// <param name="xMin">Valeur minimale de la position X du point.</param>
-        /// <param name="xMax">Valeur maximale de la position X du point.</param>
-        /// <param name="yMin">Valeur minimale de la position Y du point.</param>
-        /// <param name="yMax">Valeur maximale de la position Y du point.</param>
-        public VoyageurCommerce(int nombrePoints, int xMin, int xMax, int yMin, int yMax)
+        public Random Rand { get; }
+
+        /// <summary>
+        /// Obtient ou définit un tableau contenant les points de passage du voyageur de commerce.
+        /// </summary>
+        public Point[] PointsPassage { get; set; }
+
+        /// <summary>
+        /// Obtient le point de départ et d'arrivée du parcours.
+        /// </summary>
+        public Point Point0 => this.PointsPassage[0];
+
+        /// <summary>
+        /// Obtient ou définit le meilleur individu retourné par le calcul courant.
+        /// </summary>
+        public Individu MeilleurIndividu
         {
-            this.pointsPassage = new Point[nombrePoints];
-
-            for (int i = 0; i < nombrePoints; i++)
+            get
             {
-                int x;
-                int y;
-                Point nouveauPoint;
+                return this.meilleurIndividu;
+            }
 
-                do
+            set
+            {
+                this.meilleurIndividu = value;
+                EventHandler<EventArgs> raiseEvent = this.UpdateMeilleurIndividu;
+
+                if (raiseEvent != null)
                 {
-                    x = rand.Next(xMin, xMax);
-                    y = rand.Next(yMin, yMax);
-                    nouveauPoint = new Point(x, y);
-                } while (pointsPassage.Any(point => point.distance(nouveauPoint) < DISTANCE_MIN_ENTRE_POINTS));
-
-                pointsPassage[i] = new Point(x, y);
+                    Application.Current.Dispatcher.Invoke(new Action(() => raiseEvent(this, new EventArgs())));
+                }
             }
         }
 
@@ -130,7 +141,33 @@ namespace AlgoGenetiqueDemo
             {
                 Console.WriteLine($"Erreur lors de l'arrêt du Thread de force brute : {ex.Message}");
             }
+        }
 
+        /// <summary>
+        /// Démarre le calcul du parcours à l'aide de l'algorithme génétique.
+        /// </summary>
+        public void DemarrerAlgoGenetique()
+        {
+            this.threadAlgoGenetique = new Thread(this.CalculAlgoGenetique);
+            this.threadAlgoGenetique.Start();
+        }
+
+        /// <summary>
+        /// Arrête le calcul du parcours à l'aide de l'algorithme génétique.
+        /// </summary>
+        public void StopperAlgoGenetique()
+        {
+            try
+            {
+                if (this.threadAlgoGenetique != null && this.threadAlgoGenetique.IsAlive)
+                {
+                    this.threadAlgoGenetique.Abort();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de l'arrêt du Thread de l'algo génétique : {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -142,8 +179,8 @@ namespace AlgoGenetiqueDemo
             {
                 double meilleureValeur = double.MaxValue;
 
-                IEnumerable<Point> points = this.pointsPassage.Skip(1);
-                IEnumerable<IEnumerable<Point>> permutations = GetPermutations(points, points.Count());
+                IEnumerable<Point> points = this.PointsPassage.Skip(1);
+                IEnumerable<IEnumerable<Point>> permutations = Util.GetPermutations(points, points.Count());
 
                 foreach (IEnumerable<Point> permutation in permutations)
                 {
@@ -152,11 +189,11 @@ namespace AlgoGenetiqueDemo
                     if (individuCourant.Valeur < meilleureValeur)
                     {
                         meilleureValeur = individuCourant.Valeur;
-                        Application.Current.Dispatcher.Invoke(new Action(() => this.MeilleurIndividu = individuCourant));
+                        this.MeilleurIndividu = individuCourant;
                     }
                 }
 
-                RaiseEventFinCalcul();
+                this.RaiseEventFinCalcul();
             }
             catch (ThreadAbortException ex)
             {
@@ -169,16 +206,27 @@ namespace AlgoGenetiqueDemo
         }
 
         /// <summary>
-        /// Calcule toutes les permutations d'une liste.
+        /// Calcule le problème par la méthode de l'algorithme génétique.
         /// </summary>
-        /// <typeparam name="T">Type d'éléments de la liste.</typeparam>
-        /// <param name="list">Liste à partir de laquelle il faut calculer les permutations.</param>
-        /// <param name="length">Taille de la liste.</param>
-        /// <returns>Retourne l'ensemble des permutations.</returns>
-        private IEnumerable<IEnumerable<T>> GetPermutations<T>(IEnumerable<T> list, int length)
+        private void CalculAlgoGenetique()
         {
-            if (length == 1) return list.Select(t => new T[] { t });
-            return GetPermutations(list, length - 1).SelectMany(t => list.Where(e => !t.Contains(e)), (t1, t2) => t1.Concat(new T[] { t2 }));
+            this.MeilleurIndividu = null;
+            Population population = new Population(this, 100, 0.2d);
+            population.GenerationAleatoire();
+            int nombreGeneration = 0;
+
+            while (true)
+            {
+                if (this.MeilleurIndividu == null || population.MeilleurIndividu.Valeur < this.MeilleurIndividu.Valeur)
+                {
+                    this.MeilleurIndividu = population.MeilleurIndividu;
+                }
+
+                IEnumerable<Individu>[] couples = population.SelectionTournoi(5);
+                population.Reproduction(couples);
+                population.Mutation(0.01);
+                nombreGeneration++;
+            }
         }
 
         /// <summary>
@@ -186,7 +234,7 @@ namespace AlgoGenetiqueDemo
         /// </summary>
         private void RaiseEventFinCalcul()
         {
-            EventHandler<EventArgs> raiseEvent = FinDeCalcul;
+            EventHandler<EventArgs> raiseEvent = this.FinDeCalcul;
 
             if (raiseEvent != null)
             {

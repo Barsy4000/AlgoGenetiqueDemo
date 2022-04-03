@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using AlgoGenetiqueDemo.Outils;
 
 namespace AlgoGenetiqueDemo
 {
@@ -18,6 +16,33 @@ namespace AlgoGenetiqueDemo
         private double valeur = 0;
 
         /// <summary>
+        /// Problème de voyageur de commerce lié à l'individu.
+        /// </summary>
+        private VoyageurCommerce voyageurCommerce;
+
+        /// <summary>
+        /// Initialise une nouvelle instance de la classe <see cref="Individu"/>.
+        /// </summary>
+        /// <param name="voyageurCommerce">Problème de voyageur de commerce lié à l'individu.</param>
+        /// <param name="taille">Taille de l'individu.</param>
+        public Individu(VoyageurCommerce voyageurCommerce, int taille)
+        {
+            this.voyageurCommerce = voyageurCommerce;
+            this.Points = new Point[taille];
+        }
+
+        /// <summary>
+        /// Initialise une nouvelle instance de la classe <see cref="Individu"/>.
+        /// </summary>
+        /// <param name="points">Enumerable de points à partir duquel générer l'individu.</param>
+        /// <param name="voyageurCommerce">Problème de voyageur de commerce lié à l'individu.</param>
+        public Individu(VoyageurCommerce voyageurCommerce, IEnumerable<Point> points)
+        {
+            this.voyageurCommerce = voyageurCommerce;
+            this.Points = points.ToArray();
+        }
+
+        /// <summary>
         /// Obtient la valeur de l'individu.
         /// </summary>
         public double Valeur
@@ -25,16 +50,16 @@ namespace AlgoGenetiqueDemo
             get
             {
                 // Si la valeur est déjà calculée, ne la recalcule pas.
-                if (valeur == 0)
+                if (this.valeur == 0)
                 {
-                    this.valeur += this.VoyageurCommerce.Point0.distanceSimple(this.Points[0]);
+                    this.valeur += this.voyageurCommerce.Point0.DistanceSimple(this.Points[0]);
 
                     for (int i = 1; i < this.Points.Count(); i++)
                     {
-                        this.valeur += this.Points[i - 1].distanceSimple(this.Points[i]);
+                        this.valeur += this.Points[i - 1].DistanceSimple(this.Points[i]);
                     }
 
-                    this.valeur += this.Points[this.Points.Count() - 1].distanceSimple(this.VoyageurCommerce.Point0);
+                    this.valeur += this.Points[this.Points.Count() - 1].DistanceSimple(this.voyageurCommerce.Point0);
                 }
 
                 return this.valeur;
@@ -47,34 +72,8 @@ namespace AlgoGenetiqueDemo
         public Point[] Points { get; }
 
         /// <summary>
-        /// Obtient le problème de voyageur de commerce lié à l'individu.
-        /// </summary>
-        public VoyageurCommerce VoyageurCommerce { get; }
-
-        /// <summary>
         /// Obtient une valeur contenant la taille de l'individu.
         /// </summary>
-        public int Taille => Points.Length;
-
-        /// <summary>
-        /// Initialise une instance d'individu vide.
-        /// </summary>
-        /// <param name="voyageurCommerce">Problème de voyageur de commerce lié à l'individu.</param>
-        public Individu(VoyageurCommerce voyageurCommerce)
-        {
-            this.VoyageurCommerce = voyageurCommerce;
-            this.Points = new Point[0];
-        }
-
-        /// <summary>
-        /// Initialise une instance d'individu vide à partir d'un Enumerable de points existants.
-        /// </summary>
-        /// <param name="points">Enumerable de points à partir duquel générer l'individu.</param>
-        /// <param name="voyageurCommerce">Problème de voyageur de commerce lié à l'individu.</param>
-        public Individu(VoyageurCommerce voyageurCommerce, IEnumerable<Point> points)
-        {
-            this.VoyageurCommerce = voyageurCommerce;
-            this.Points = points.ToArray();
-        }
+        public int Taille => this.Points.Length;
     }
 }

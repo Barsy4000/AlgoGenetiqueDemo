@@ -1,23 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace AlgoGenetiqueDemo
 {
     /// <summary>
-    /// Logique d'interaction pour MainWindow.xaml
+    /// Logique d'interaction pour MainWindow.xaml.
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -29,12 +23,12 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Taille d'affichage de chaque points.
         /// </summary>
-        public const int TAILLE_POINT = 7;
+        public const int TaillePoint = 7;
 
         /// <summary>
         /// Epaisseur des lignes.
         /// </summary>
-        public const int EPAISSEUR_LIGNE = 3;
+        public const int EpaisseurLigne = 3;
 
         /// <summary>
         /// Problème du voyageur de commerce.
@@ -42,11 +36,34 @@ namespace AlgoGenetiqueDemo
         private VoyageurCommerce voyageurCommerce;
 
         /// <summary>
-        /// Initialise la fenêtre principale.
+        /// Chronomètre pour mesurer le temps d'exécution des algos.
+        /// </summary>
+        private DispatcherTimer chronometre = new DispatcherTimer(DispatcherPriority.Normal);
+
+        /// <summary>
+        /// Date de démarrage du calcul.
+        /// </summary>
+        private DateTime dateDebutCalcul;
+
+        /// <summary>
+        /// Initialise une nouvelle instance de la classe <see cref="MainWindow"/>.
         /// </summary>
         public MainWindow()
         {
-            InitializeComponent();
+            this.InitializeComponent();
+
+            this.chronometre.Interval = TimeSpan.FromSeconds(1);
+            this.chronometre.Tick += this.Chronometre_Tick;
+        }
+
+        /// <summary>
+        /// Chronomètre la durée d'exécution des algos.
+        /// </summary>
+        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
+        /// <param name="e">Informations sur l'évènement.</param>
+        private void Chronometre_Tick(object sender, EventArgs e)
+        {
+            this.lblChronometre.Content = (DateTime.Now - this.dateDebutCalcul).ToString("h':'mm':'ss");
         }
 
         /// <summary>
@@ -67,13 +84,13 @@ namespace AlgoGenetiqueDemo
         /// </summary>
         /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
         /// <param name="e">Informations sur l'évènement.</param>
-        private void btnGenererParcours_Click(object sender, RoutedEventArgs e)
+        private void BtnGenererParcours_Click(object sender, RoutedEventArgs e)
         {
             this.cnvDrawZone.Children.Clear();
 
             int nombrePoints = 0;
 
-            if (!int.TryParse(txtNombrePoints.Text, out nombrePoints))
+            if (!int.TryParse(this.txtNombrePoints.Text, out nombrePoints))
             {
                 MessageBox.Show("Le nombre de points doit être renseigné", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -83,26 +100,10 @@ namespace AlgoGenetiqueDemo
             int yMax = (int)this.cnvDrawZone.ActualHeight - MARGE;
 
             this.voyageurCommerce = new VoyageurCommerce(nombrePoints, MARGE, xMax, MARGE, yMax);
-            voyageurCommerce.UpdateMeilleurIndividu += VoyageurCommerce_UpdateMeilleurIndividu;
-            voyageurCommerce.FinDeCalcul += VoyageurCommerce_FinDeCalcul;
+            this.voyageurCommerce.UpdateMeilleurIndividu += this.VoyageurCommerce_UpdateMeilleurIndividu;
+            this.voyageurCommerce.FinDeCalcul += this.VoyageurCommerce_FinDeCalcul;
 
             this.DrawVoyageurCommerce();
-        }
-
-        /// <summary>
-        /// Evènement de fin de calcul.
-        /// </summary>
-        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
-        /// <param name="e">Informations sur l'évènement.</param>
-        private void VoyageurCommerce_FinDeCalcul(object sender, EventArgs e)
-        {
-            if (this.voyageurCommerce != null)
-            {
-                this.btnGenererParcours.IsEnabled = true;
-                this.btnDemarrerForceBrute.IsEnabled = true;
-                this.btnArreterForceBrute.IsEnabled = false;
-                this.voyageurCommerce.StopperForceBrute();
-            }
         }
 
         /// <summary>
@@ -135,15 +136,15 @@ namespace AlgoGenetiqueDemo
         {
             Color couleurPoint = Colors.Red;
 
-            foreach (Point pointPassage in this.voyageurCommerce.pointsPassage)
+            foreach (Point pointPassage in this.voyageurCommerce.PointsPassage)
             {
                 Ellipse ellipse = new Ellipse();
                 SolidColorBrush mySolidColorBrush = new SolidColorBrush(couleurPoint);
                 ellipse.Fill = mySolidColorBrush;
-                ellipse.Width = TAILLE_POINT;
-                ellipse.Height = TAILLE_POINT;
-                Canvas.SetLeft(ellipse, pointPassage.X - TAILLE_POINT / 2);
-                Canvas.SetTop(ellipse, pointPassage.Y - TAILLE_POINT / 2);
+                ellipse.Width = TaillePoint;
+                ellipse.Height = TaillePoint;
+                Canvas.SetLeft(ellipse, pointPassage.X - (TaillePoint / 2));
+                Canvas.SetTop(ellipse, pointPassage.Y - (TaillePoint / 2));
                 this.cnvDrawZone.Children.Add(ellipse);
 
                 couleurPoint = Colors.Black;
@@ -153,19 +154,22 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Dessine un individu sur la carte.
         /// </summary>
-        /// <param name="individu"></param>
+        /// <param name="individu">Individu à représenter sur la carte.</param>
         private void DrawIndividu(Individu individu)
         {
-            DrawLine(this.voyageurCommerce.Point0, individu.Points[0]);
-
-            for (int i = 1; i < individu.Points.Count(); i++)
+            if (individu != null)
             {
-                DrawLine(individu.Points[i - 1], individu.Points[i]);
+                this.DrawLine(this.voyageurCommerce.Point0, individu.Points[0]);
+
+                for (int i = 1; i < individu.Points.Count(); i++)
+                {
+                    this.DrawLine(individu.Points[i - 1], individu.Points[i]);
+                }
+
+                this.DrawLine(individu.Points[individu.Points.Count() - 1], this.voyageurCommerce.Point0);
+
+                this.lblResultValeurIndividu.Content = string.Format("{0:### ### ### ###}", individu.Valeur);
             }
-
-            DrawLine(individu.Points[individu.Points.Count() - 1], this.voyageurCommerce.Point0);
-
-            this.lblResultValeurIndividu.Content = String.Format("{0:### ### ### ###}", individu.Valeur);
         }
 
         /// <summary>
@@ -181,7 +185,7 @@ namespace AlgoGenetiqueDemo
             lineFirst.X2 = point2.X;
             lineFirst.Y1 = point1.Y;
             lineFirst.Y2 = point2.Y;
-            lineFirst.StrokeThickness = EPAISSEUR_LIGNE;
+            lineFirst.StrokeThickness = EpaisseurLigne;
             this.cnvDrawZone.Children.Add(lineFirst);
         }
 
@@ -190,13 +194,13 @@ namespace AlgoGenetiqueDemo
         /// </summary>
         /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
         /// <param name="e">Informations sur l'évènement.</param>
-        private void btnDemarrerForceBrute_Click(object sender, RoutedEventArgs e)
+        private void BtnDemarrerForceBrute_Click(object sender, RoutedEventArgs e)
         {
             if (this.voyageurCommerce != null)
             {
-                this.btnGenererParcours.IsEnabled = false;
-                this.btnDemarrerForceBrute.IsEnabled = false;
-                this.btnArreterForceBrute.IsEnabled = true;
+                this.DesactiveBoutonsSauf(this.btnArreterForceBrute);
+                this.dateDebutCalcul = DateTime.Now;
+                this.chronometre.Start();
                 this.voyageurCommerce.DemarrerForceBrute();
             }
         }
@@ -206,15 +210,87 @@ namespace AlgoGenetiqueDemo
         /// </summary>
         /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
         /// <param name="e">Informations sur l'évènement.</param>
-        private void btnArreterForceBrute_Click(object sender, RoutedEventArgs e)
+        private void BtnArreterForceBrute_Click(object sender, RoutedEventArgs e)
         {
             if (this.voyageurCommerce != null)
             {
-                this.btnGenererParcours.IsEnabled = true;
-                this.btnDemarrerForceBrute.IsEnabled = true;
-                this.btnArreterForceBrute.IsEnabled = false;
+                this.ReinitialiseBoutons();
+                this.chronometre.Stop();
                 this.voyageurCommerce.StopperForceBrute();
             }
+        }
+
+        /// <summary>
+        /// Démarre le calcul par algo génétique.
+        /// </summary>
+        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
+        /// <param name="e">Informations sur l'évènement.</param>
+        private void BtnDemarrerAlgoGenetique_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.voyageurCommerce != null)
+            {
+                this.DesactiveBoutonsSauf(this.btnArreterAlgoGenetique);
+                this.dateDebutCalcul = DateTime.Now;
+                this.chronometre.Start();
+                this.voyageurCommerce.DemarrerAlgoGenetique();
+            }
+        }
+
+        /// <summary>
+        /// Arrête le calcul par algo génétique.
+        /// </summary>
+        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
+        /// <param name="e">Informations sur l'évènement.</param>
+        private void BtnArreterAlgoGenetique_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.voyageurCommerce != null)
+            {
+                this.ReinitialiseBoutons();
+                this.chronometre.Stop();
+                this.voyageurCommerce.StopperAlgoGenetique();
+            }
+        }
+
+        /// <summary>
+        /// Evènement de fin de calcul.
+        /// </summary>
+        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
+        /// <param name="e">Informations sur l'évènement.</param>
+        private void VoyageurCommerce_FinDeCalcul(object sender, EventArgs e)
+        {
+            if (this.voyageurCommerce != null)
+            {
+                this.ReinitialiseBoutons();
+                this.chronometre.Stop();
+                this.voyageurCommerce.StopperForceBrute();
+            }
+        }
+
+        /// <summary>
+        /// Réinitialise l'état des boutons.
+        /// </summary>
+        private void ReinitialiseBoutons()
+        {
+            this.btnGenererParcours.IsEnabled = true;
+            this.btnDemarrerForceBrute.IsEnabled = true;
+            this.btnArreterForceBrute.IsEnabled = false;
+            this.btnDemarrerAlgoGenetique.IsEnabled = true;
+            this.btnArreterAlgoGenetique.IsEnabled = false;
+        }
+
+        /// <summary>
+        /// Désactive tous les boutons sauf un.
+        /// </summary>
+        /// <param name="boutonActif">Bouton à garder actif.</param>
+        private void DesactiveBoutonsSauf(Button boutonActif)
+        {
+            this.btnGenererParcours.IsEnabled = false;
+            this.btnDemarrerForceBrute.IsEnabled = false;
+            this.btnArreterForceBrute.IsEnabled = false;
+            this.btnDemarrerAlgoGenetique.IsEnabled = false;
+            this.btnArreterAlgoGenetique.IsEnabled = false;
+
+            boutonActif.IsEnabled = true;
         }
     }
 }
