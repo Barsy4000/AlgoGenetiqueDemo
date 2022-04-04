@@ -67,6 +67,28 @@ namespace AlgoGenetiqueDemo
         }
 
         /// <summary>
+        /// Obtient la valeur réelle de l'individu pour affichage.
+        /// </summary>
+        public double ValeurPourAffichage
+        {
+            get
+            {
+                double result = 0;
+
+                result += this.voyageurCommerce.Point0.Distance(this.Points[0]);
+
+                for (int i = 1; i < this.Points.Count(); i++)
+                {
+                    result += this.Points[i - 1].Distance(this.Points[i]);
+                }
+
+                result += this.Points[this.Points.Count() - 1].Distance(this.voyageurCommerce.Point0);
+
+                return result;
+            }
+        }
+
+        /// <summary>
         /// Obtient la liste des points constituant l'individu.
         /// </summary>
         public Point[] Points { get; }

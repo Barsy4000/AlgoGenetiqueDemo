@@ -10,11 +10,6 @@ namespace AlgoGenetiqueDemo
     internal class Population
     {
         /// <summary>
-        /// Probabilité de mutation.
-        /// </summary>
-        private double probabiliteMutation;
-
-        /// <summary>
         /// Individus constituant la population.
         /// </summary>
         private Individu[] individus;
@@ -34,12 +29,10 @@ namespace AlgoGenetiqueDemo
         /// </summary>
         /// <param name="voyageurCommerce">Problème de voyageur de commerce lié à la population.</param>
         /// <param name="taille">Nombre d'individus dans la population.</param>
-        /// <param name="probabiliteMutation">Probabilité de mutation.</param>
-        public Population(VoyageurCommerce voyageurCommerce, int taille, double probabiliteMutation)
+        public Population(VoyageurCommerce voyageurCommerce, int taille)
         {
             this.voyageurCommerce = voyageurCommerce;
             this.genes = voyageurCommerce.PointsPassage.Skip(1);
-            this.probabiliteMutation = probabiliteMutation;
             this.individus = new Individu[taille];
         }
 
@@ -75,7 +68,7 @@ namespace AlgoGenetiqueDemo
                 IEnumerable<Individu> combattants = this.individus.OrderBy(individu => this.voyageurCommerce.Rand.Next()).Take(nombreCombattants);
 
                 // Garde les deux meilleurs pour former un couple.
-                IEnumerable<Individu> gagnants = combattants.OrderBy(individu => individu.Valeur).Take(2);
+                IEnumerable<Individu> gagnants = combattants.OrderBy(individu => individu.Valeur).Take(2).OrderBy(individu => this.voyageurCommerce.Rand.Next());
 
                 couples[i] = gagnants;
             }

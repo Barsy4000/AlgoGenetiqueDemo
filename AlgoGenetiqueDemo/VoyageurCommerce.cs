@@ -146,9 +146,12 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Démarre le calcul du parcours à l'aide de l'algorithme génétique.
         /// </summary>
-        public void DemarrerAlgoGenetique()
+        /// <param name="taillePopulation">Taille de la population.</param>
+        /// <param name="activerMutation">Activation de l'étape de mutation.</param>
+        /// <param name="probabiliteMutation">Probabilité de mutation d'un gène.</param>
+        public void DemarrerAlgoGenetique(int taillePopulation, bool activerMutation, double probabiliteMutation)
         {
-            this.threadAlgoGenetique = new Thread(this.CalculAlgoGenetique);
+            this.threadAlgoGenetique = new Thread(() => this.CalculAlgoGenetique(taillePopulation, activerMutation, probabiliteMutation));
             this.threadAlgoGenetique.Start();
         }
 
@@ -208,23 +211,30 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Calcule le problème par la méthode de l'algorithme génétique.
         /// </summary>
-        private void CalculAlgoGenetique()
+        private void CalculAlgoGenetique(int taillePopulation, bool activerMutation, double probabiliteMutation)
         {
             this.MeilleurIndividu = null;
-            Population population = new Population(this, 100, 0.2d);
+            Population population = new Population(this, taillePopulation);
             population.GenerationAleatoire();
             int nombreGeneration = 0;
+            double meilleureValeur = double.MaxValue;
 
             while (true)
             {
-                if (this.MeilleurIndividu == null || population.MeilleurIndividu.Valeur < this.MeilleurIndividu.Valeur)
+                if (this.MeilleurIndividu == null || population.MeilleurIndividu.Valeur < meilleureValeur)
                 {
                     this.MeilleurIndividu = population.MeilleurIndividu;
+                    meilleureValeur = this.MeilleurIndividu.Valeur;
                 }
 
                 IEnumerable<Individu>[] couples = population.SelectionTournoi(5);
                 population.Reproduction(couples);
-                population.Mutation(0.01);
+
+                if (activerMutation)
+                {
+                    population.Mutation(probabiliteMutation);
+                }
+
                 nombreGeneration++;
             }
         }
@@ -238,7 +248,7 @@ namespace AlgoGenetiqueDemo
 
             if (raiseEvent != null)
             {
-                Application.Current.Dispatcher.Invoke(new Action(() => raiseEvent(this, new EventArgs())));
+                Application.Current.Dispatcher.BeginInvoke(new Action(() => raiseEvent(this, new EventArgs())));
             }
         }
     }

@@ -76,6 +76,7 @@ namespace AlgoGenetiqueDemo
             if (this.voyageurCommerce != null)
             {
                 this.voyageurCommerce.StopperForceBrute();
+                this.voyageurCommerce.StopperAlgoGenetique();
             }
         }
 
@@ -168,7 +169,7 @@ namespace AlgoGenetiqueDemo
 
                 this.DrawLine(individu.Points[individu.Points.Count() - 1], this.voyageurCommerce.Point0);
 
-                this.lblResultValeurIndividu.Content = string.Format("{0:### ### ### ###}", individu.Valeur);
+                this.lblResultValeurIndividu.Content = string.Format("{0:### ### ### ###}", individu.ValeurPourAffichage);
             }
         }
 
@@ -229,10 +230,24 @@ namespace AlgoGenetiqueDemo
         {
             if (this.voyageurCommerce != null)
             {
+                int taillePopulation;
+                if (!int.TryParse(this.txtTaillePopulation.Text, out taillePopulation))
+                {
+                    taillePopulation = 0;
+                }
+
+                bool activerMutation = this.cbActiverMutation.IsChecked == true;
+
+                double probabiliteMutation;
+                if (!double.TryParse(this.txtProbabiliteMutation.Text, out probabiliteMutation))
+                {
+                    probabiliteMutation = 0;
+                }
+
                 this.DesactiveBoutonsSauf(this.btnArreterAlgoGenetique);
                 this.dateDebutCalcul = DateTime.Now;
                 this.chronometre.Start();
-                this.voyageurCommerce.DemarrerAlgoGenetique();
+                this.voyageurCommerce.DemarrerAlgoGenetique(taillePopulation, activerMutation, probabiliteMutation);
             }
         }
 
