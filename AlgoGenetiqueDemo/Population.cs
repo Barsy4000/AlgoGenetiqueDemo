@@ -73,8 +73,13 @@ namespace AlgoGenetiqueDemo
 
             for (int i = 0; i < this.individus.Length; i++)
             {
-                // Tire des combattants au sort.
-                IEnumerable<Individu> combattants = this.individus.OrderBy(individu => this.Rand.Next()).Take(nombreCombattants);
+                List<Individu> combattants = new List<Individu>();
+
+                for (int j = 0; j < nombreCombattants; j++)
+                {
+                    // Tire des combattants au sort.
+                    combattants.Add(this.individus[this.Rand.Next(this.individus.Length)]);
+                }
 
                 // Garde les deux meilleurs pour former un couple.
                 IEnumerable<Individu> gagnants = combattants.OrderBy(individu => individu.Valeur).Take(2).OrderBy(individu => this.Rand.Next());
@@ -85,9 +90,95 @@ namespace AlgoGenetiqueDemo
             return couples;
         }
 
+        /// <summary>
+        /// Sélectionne des individus pour former des couples par la méthode aléatoire pondérée par valeur.
+        /// </summary>
+        /// <returns>Retourne des couples d'individus.</returns>
         public IEnumerable<Individu>[] SelectionPonderee()
         {
             IEnumerable<Individu>[] couples = new IEnumerable<Individu>[this.individus.Length];
+
+            double sommeValeurs = this.individus.Sum(individu => individu.Valeur);
+            double sommeInverses = this.individus.Sum(individu => sommeValeurs / individu.Valeur);
+
+            for (int i = 0; i < this.individus.Length; i++)
+            {
+                Individu parent1 = null;
+                Individu parent2 = null;
+
+                double rand1 = this.Rand.NextDouble() * sommeInverses;
+                double rand2 = this.Rand.NextDouble() * sommeInverses;
+                double temp = 0;
+                int index = 0;
+
+                while (parent1 == null || parent2 == null)
+                {
+                    temp += sommeValeurs / this.individus[index].Valeur;
+
+                    if (parent1 == null && temp > rand1)
+                    {
+                        parent1 = this.individus[index];
+                    }
+
+                    if (parent2 == null && temp > rand2)
+                    {
+                        parent2 = this.individus[index];
+                    }
+
+                    index++;
+                }
+
+                couples[i] = new[] { parent1, parent2 };
+            }
+
+            return couples;
+        }
+
+        /// <summary>
+        /// Sélectionne des individus pour former des couples par la méthode aléatoire pondérée par rang.
+        /// </summary>
+        /// <returns>Retourne des couples d'individus.</returns>
+        public IEnumerable<Individu>[] SelectionRang()
+        {
+            IEnumerable<Individu>[] couples = new IEnumerable<Individu>[this.individus.Length];
+
+            double sommeRangs = this.individus.Length * (this.individus.Length + 1d) / 2d;
+            double sommeInverses = 0;
+
+            for (int i = 0; i < this.individus.Length; i++)
+            {
+                sommeInverses += sommeRangs / (i + 1d);
+            }
+
+            for (int i = 0; i < this.individus.Length; i++)
+            {
+                Individu parent1 = null;
+                Individu parent2 = null;
+
+                double rand1 = this.Rand.NextDouble() * sommeInverses;
+                double rand2 = this.Rand.NextDouble() * sommeInverses;
+                double temp = 0;
+                int index = 0;
+
+                while (parent1 == null || parent2 == null)
+                {
+                    temp += sommeRangs / (index + 1);
+
+                    if (parent1 == null && temp > rand1)
+                    {
+                        parent1 = this.individus[index];
+                    }
+
+                    if (parent2 == null && temp > rand2)
+                    {
+                        parent2 = this.individus[index];
+                    }
+
+                    index++;
+                }
+
+                couples[i] = new[] { parent1, parent2 };
+            }
 
             return couples;
         }

@@ -56,13 +56,20 @@
                         <RowDefinition Height="1*" />
                         <RowDefinition Height="1*" />
                         <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
                     </Grid.RowDefinitions>
                     <Label Content="Taille population : " FontSize="14" FontFamily="Calibri"/>
                     <TextBox x:Name="txtTaillePopulation" Grid.Column="1" TextWrapping="Wrap" Text="1000" HorizontalAlignment="Stretch" PreviewTextInput="NumberValidationTextBox" Margin="5" FontFamily="Calibri" FontSize="14" />
-                    <Label Content="Nombre de combattants : " Grid.Row="1" FontSize="14" FontFamily="Calibri"/>
-                    <TextBox x:Name="txtNombreCombattants" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Text="5" HorizontalAlignment="Stretch" PreviewTextInput="NumberValidationTextBox" Margin="5" FontFamily="Calibri" FontSize="14" />
-                    <Label Content="Probabilité mutation : " Grid.Row="2" FontSize="14" FontFamily="Calibri"/>
-                    <TextBox x:Name="txtProbabiliteMutation" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Text="0.15" HorizontalAlignment="Stretch" Margin="5" FontFamily="Calibri" FontSize="14" />
+                    <Label Content="Mode de sélection : " Grid.Row="1" FontSize="14" FontFamily="Calibri"/>
+                    <RadioButton x:Name="rbSelectionTournoi" GroupName="ModeSelection" Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" IsChecked="True">Tournoi</RadioButton>
+                    <RadioButton x:Name="rbSelectionPonderee" GroupName="ModeSelection" Grid.Row="2" Grid.Column="1">Pondérée</RadioButton>
+                    <RadioButton x:Name="rbSelectionRang" GroupName="ModeSelection" Grid.Row="3" Grid.Column="1">Rang</RadioButton>
+                    <Label Content="Nombre de combattants : " Grid.Row="4" FontSize="14" FontFamily="Calibri" />
+                    <TextBox x:Name="txtNombreCombattants" Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" Text="5" HorizontalAlignment="Stretch" IsEnabled="{Binding ElementName=rbSelectionTournoi, Path=IsChecked}"  PreviewTextInput="NumberValidationTextBox" Margin="5" FontFamily="Calibri" FontSize="14" />
+                    <Label Content="Probabilité mutation : " Grid.Row="5" FontSize="14" FontFamily="Calibri"/>
+                    <TextBox x:Name="txtProbabiliteMutation" Grid.Row="5" Grid.Column="1" TextWrapping="Wrap" Text="0.15" HorizontalAlignment="Stretch" Margin="5" FontFamily="Calibri" FontSize="14" />
                 </Grid>
                 <Grid>
                     <Grid.ColumnDefinitions>

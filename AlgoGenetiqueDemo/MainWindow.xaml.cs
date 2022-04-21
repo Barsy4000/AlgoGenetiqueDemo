@@ -267,7 +267,19 @@ namespace AlgoGenetiqueDemo
                 this.DesactiveBoutonsSauf(this.btnArreterAlgoGenetique);
                 this.dateDebutCalcul = DateTime.Now;
                 this.chronometre.Start();
-                this.voyageurCommerce.DemarrerAlgoGenetique(taillePopulation, nombreCombattants, probabiliteMutation);
+
+                VoyageurCommerce.ModeSelection modeSelection = VoyageurCommerce.ModeSelection.TOURNOI;
+
+                if (this.rbSelectionPonderee.IsChecked == true)
+                {
+                    modeSelection = VoyageurCommerce.ModeSelection.PONDEREE;
+                }
+                else if (this.rbSelectionRang.IsChecked == true)
+                {
+                    modeSelection = VoyageurCommerce.ModeSelection.RANG;
+                }
+
+                this.voyageurCommerce.DemarrerAlgoGenetique(taillePopulation, modeSelection, nombreCombattants, probabiliteMutation);
             }
         }
 

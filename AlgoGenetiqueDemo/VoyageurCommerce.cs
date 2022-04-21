@@ -85,6 +85,27 @@ namespace AlgoGenetiqueDemo
         public event EventHandler<UpdateGenerationEventArgs> UpdateNombreGeneration;
 
         /// <summary>
+        /// Modes de sélection possible de l'algorithme.
+        /// </summary>
+        public enum ModeSelection
+        {
+            /// <summary>
+            /// Séléction par tournoi.
+            /// </summary>
+            TOURNOI,
+
+            /// <summary>
+            /// Sélection pondérée.
+            /// </summary>
+            PONDEREE,
+
+            /// <summary>
+            /// Sélection par rang.
+            /// </summary>
+            RANG,
+        }
+
+        /// <summary>
         /// Obtient le générateur de nombre aléatoire.
         /// </summary>
         public Random Rand { get; }
@@ -152,11 +173,12 @@ namespace AlgoGenetiqueDemo
         /// Démarre le calcul du parcours à l'aide de l'algorithme génétique.
         /// </summary>
         /// <param name="taillePopulation">Taille de la population.</param>
+        /// <param name="modeSelection">Mode de sélection.</param>
         /// <param name="nombreCombattants">Nombre de combattants pour la sélection par tournois.</param>
         /// <param name="probabiliteMutation">Probabilité de mutation d'un gène.</param>
-        public void DemarrerAlgoGenetique(int taillePopulation, int nombreCombattants,  double probabiliteMutation)
+        public void DemarrerAlgoGenetique(int taillePopulation, ModeSelection modeSelection, int nombreCombattants,  double probabiliteMutation)
         {
-            this.threadAlgoGenetique = new Thread(() => this.CalculAlgoGenetique(taillePopulation, nombreCombattants, probabiliteMutation));
+            this.threadAlgoGenetique = new Thread(() => this.CalculAlgoGenetique(taillePopulation, modeSelection, nombreCombattants, probabiliteMutation));
             this.threadAlgoGenetique.Start();
         }
 
@@ -217,9 +239,10 @@ namespace AlgoGenetiqueDemo
         /// Calcule le problème par la méthode de l'algorithme génétique.
         /// </summary>
         /// <param name="taillePopulation">Taille de la population.</param>
+        /// <param name="modeSelection">Mode de sélection.</param>
         /// <param name="nombreCombattants">Nombre de combattants pour la sélection par tournois.</param>
         /// <param name="probabiliteMutation">Probabilité de mutation d'un gène.</param>
-        private void CalculAlgoGenetique(int taillePopulation, int nombreCombattants, double probabiliteMutation)
+        private void CalculAlgoGenetique(int taillePopulation, ModeSelection modeSelection, int nombreCombattants, double probabiliteMutation)
         {
             this.MeilleurIndividu = null;
             Population population = new Population(this.Point0, this.PointsPassage.Skip(1), taillePopulation);
@@ -244,7 +267,24 @@ namespace AlgoGenetiqueDemo
                     meilleureValeur = this.MeilleurIndividu.Valeur;
                 }
 
-                IEnumerable<Individu>[] couples = population.SelectionTournoi(nombreCombattants);
+                IEnumerable<Individu>[] couples;
+
+                switch (modeSelection)
+                {
+                    case ModeSelection.TOURNOI:
+                        couples = population.SelectionTournoi(nombreCombattants);
+                        break;
+                    case ModeSelection.PONDEREE:
+                        couples = population.SelectionPonderee();
+                        break;
+                    case ModeSelection.RANG:
+                        couples = population.SelectionRang();
+                        break;
+                    default:
+                        couples = population.SelectionTournoi(nombreCombattants);
+                        break;
+                }
+
                 population.Reproduction(couples);
 
                 if (probabiliteMutation != 0)
