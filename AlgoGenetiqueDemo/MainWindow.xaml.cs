@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using AlgoGenetiqueDemo.Outils;
 
 namespace AlgoGenetiqueDemo
 {
@@ -38,7 +40,7 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Chronomètre pour mesurer le temps d'exécution des algos.
         /// </summary>
-        private DispatcherTimer chronometre = new DispatcherTimer(DispatcherPriority.Normal);
+        private Timer chronometre;
 
         /// <summary>
         /// Date de démarrage du calcul.
@@ -52,8 +54,9 @@ namespace AlgoGenetiqueDemo
         {
             this.InitializeComponent();
 
-            this.chronometre.Interval = TimeSpan.FromSeconds(1);
-            this.chronometre.Tick += this.Chronometre_Tick;
+            this.chronometre = new Timer();
+            this.chronometre.Interval = 0.0001;
+            this.chronometre.Elapsed += this.Chronometre_Tick;
         }
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace AlgoGenetiqueDemo
         /// <param name="e">Informations sur l'évènement.</param>
         private void Chronometre_Tick(object sender, EventArgs e)
         {
-            this.lblChronometre.Content = (DateTime.Now - this.dateDebutCalcul).ToString("h':'mm':'ss");
+            Application.Current.Dispatcher.Invoke(new Action(() => this.lblChronometre.Content = (DateTime.Now - this.dateDebutCalcul).ToString("h':'mm':'ss")));
         }
 
         /// <summary>
@@ -78,6 +81,8 @@ namespace AlgoGenetiqueDemo
                 this.voyageurCommerce.StopperForceBrute();
                 this.voyageurCommerce.StopperAlgoGenetique();
             }
+
+            this.chronometre.Stop();
         }
 
         /// <summary>
@@ -103,6 +108,7 @@ namespace AlgoGenetiqueDemo
             this.voyageurCommerce = new VoyageurCommerce(nombrePoints, MARGE, xMax, MARGE, yMax);
             this.voyageurCommerce.UpdateMeilleurIndividu += this.VoyageurCommerce_UpdateMeilleurIndividu;
             this.voyageurCommerce.FinDeCalcul += this.VoyageurCommerce_FinDeCalcul;
+            this.voyageurCommerce.UpdateNombreGeneration += this.VoyageurCommerce_UpdateNombreGeneration;
 
             this.DrawVoyageurCommerce();
         }
@@ -128,6 +134,16 @@ namespace AlgoGenetiqueDemo
             this.cnvDrawZone.Children.Clear();
             this.DrawIndividu(this.voyageurCommerce.MeilleurIndividu);
             this.DrawVoyageurCommerce();
+        }
+
+        /// <summary>
+        /// Mise à jour du nombre de générations lors du calcul par algorithme génétique.
+        /// </summary>
+        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
+        /// <param name="e">Informations sur l'évènement.</param>
+        private void VoyageurCommerce_UpdateNombreGeneration(object sender, UpdateGenerationEventArgs e)
+        {
+            this.lblNombreGenerations.Content = e.NombreGenerations;
         }
 
         /// <summary>
@@ -236,7 +252,11 @@ namespace AlgoGenetiqueDemo
                     taillePopulation = 0;
                 }
 
-                bool activerMutation = this.cbActiverMutation.IsChecked == true;
+                int nombreCombattants;
+                if (!int.TryParse(this.txtNombreCombattants.Text, out nombreCombattants))
+                {
+                    nombreCombattants = 0;
+                }
 
                 double probabiliteMutation;
                 if (!double.TryParse(this.txtProbabiliteMutation.Text, out probabiliteMutation))
@@ -247,7 +267,7 @@ namespace AlgoGenetiqueDemo
                 this.DesactiveBoutonsSauf(this.btnArreterAlgoGenetique);
                 this.dateDebutCalcul = DateTime.Now;
                 this.chronometre.Start();
-                this.voyageurCommerce.DemarrerAlgoGenetique(taillePopulation, activerMutation, probabiliteMutation);
+                this.voyageurCommerce.DemarrerAlgoGenetique(taillePopulation, nombreCombattants, probabiliteMutation);
             }
         }
 

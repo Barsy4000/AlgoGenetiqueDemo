@@ -80,6 +80,11 @@ namespace AlgoGenetiqueDemo
         public event EventHandler<EventArgs> FinDeCalcul;
 
         /// <summary>
+        /// Evènement lors de la mise à jour du nombre de générations.
+        /// </summary>
+        public event EventHandler<UpdateGenerationEventArgs> UpdateNombreGeneration;
+
+        /// <summary>
         /// Obtient le générateur de nombre aléatoire.
         /// </summary>
         public Random Rand { get; }
@@ -147,11 +152,11 @@ namespace AlgoGenetiqueDemo
         /// Démarre le calcul du parcours à l'aide de l'algorithme génétique.
         /// </summary>
         /// <param name="taillePopulation">Taille de la population.</param>
-        /// <param name="activerMutation">Activation de l'étape de mutation.</param>
+        /// <param name="nombreCombattants">Nombre de combattants pour la sélection par tournois.</param>
         /// <param name="probabiliteMutation">Probabilité de mutation d'un gène.</param>
-        public void DemarrerAlgoGenetique(int taillePopulation, bool activerMutation, double probabiliteMutation)
+        public void DemarrerAlgoGenetique(int taillePopulation, int nombreCombattants,  double probabiliteMutation)
         {
-            this.threadAlgoGenetique = new Thread(() => this.CalculAlgoGenetique(taillePopulation, activerMutation, probabiliteMutation));
+            this.threadAlgoGenetique = new Thread(() => this.CalculAlgoGenetique(taillePopulation, nombreCombattants, probabiliteMutation));
             this.threadAlgoGenetique.Start();
         }
 
@@ -187,7 +192,7 @@ namespace AlgoGenetiqueDemo
 
                 foreach (IEnumerable<Point> permutation in permutations)
                 {
-                    Individu individuCourant = new Individu(this, permutation);
+                    Individu individuCourant = new Individu(this.Point0, permutation);
 
                     if (individuCourant.Valeur < meilleureValeur)
                     {
@@ -211,31 +216,41 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Calcule le problème par la méthode de l'algorithme génétique.
         /// </summary>
-        private void CalculAlgoGenetique(int taillePopulation, bool activerMutation, double probabiliteMutation)
+        /// <param name="taillePopulation">Taille de la population.</param>
+        /// <param name="nombreCombattants">Nombre de combattants pour la sélection par tournois.</param>
+        /// <param name="probabiliteMutation">Probabilité de mutation d'un gène.</param>
+        private void CalculAlgoGenetique(int taillePopulation, int nombreCombattants, double probabiliteMutation)
         {
             this.MeilleurIndividu = null;
-            Population population = new Population(this, taillePopulation);
+            Population population = new Population(this.Point0, this.PointsPassage.Skip(1), taillePopulation);
             population.GenerationAleatoire();
             int nombreGeneration = 0;
             double meilleureValeur = double.MaxValue;
 
             while (true)
             {
+                nombreGeneration++;
+
+                EventHandler<UpdateGenerationEventArgs> raiseEvent = this.UpdateNombreGeneration;
+
+                if (raiseEvent != null)
+                {
+                    Application.Current.Dispatcher.Invoke(new Action(() => raiseEvent(this, new UpdateGenerationEventArgs(nombreGeneration))));
+                }
+
                 if (this.MeilleurIndividu == null || population.MeilleurIndividu.Valeur < meilleureValeur)
                 {
                     this.MeilleurIndividu = population.MeilleurIndividu;
                     meilleureValeur = this.MeilleurIndividu.Valeur;
                 }
 
-                IEnumerable<Individu>[] couples = population.SelectionTournoi(5);
+                IEnumerable<Individu>[] couples = population.SelectionTournoi(nombreCombattants);
                 population.Reproduction(couples);
 
-                if (activerMutation)
+                if (probabiliteMutation != 0)
                 {
                     population.Mutation(probabiliteMutation);
                 }
-
-                nombreGeneration++;
             }
         }
 
