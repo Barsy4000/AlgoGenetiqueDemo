@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Timers;
@@ -57,6 +58,8 @@ namespace AlgoGenetiqueDemo
             this.chronometre = new Timer();
             this.chronometre.Interval = 0.0001;
             this.chronometre.Elapsed += this.Chronometre_Tick;
+
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         }
 
         /// <summary>
@@ -197,7 +200,7 @@ namespace AlgoGenetiqueDemo
         private void DrawLine(Point point1, Point point2)
         {
             Line lineFirst = new Line();
-            lineFirst.Stroke = Brushes.Gray;
+            lineFirst.Stroke = Brushes.LightCoral;
             lineFirst.X1 = point1.X;
             lineFirst.X2 = point2.X;
             lineFirst.Y1 = point1.Y;

@@ -98,37 +98,44 @@ namespace AlgoGenetiqueDemo
         {
             IEnumerable<Individu>[] couples = new IEnumerable<Individu>[this.individus.Length];
 
-            double sommeValeurs = this.individus.Sum(individu => individu.Valeur);
-            double sommeInverses = this.individus.Sum(individu => sommeValeurs / individu.Valeur);
+            double valeurMax = this.individus.Max(individu => individu.Valeur);
+            double sommeDiff = this.individus.Sum(individu => valeurMax - individu.Valeur);
 
-            for (int i = 0; i < this.individus.Length; i++)
+            if (sommeDiff != 0)
             {
-                Individu parent1 = null;
-                Individu parent2 = null;
-
-                double rand1 = this.Rand.NextDouble() * sommeInverses;
-                double rand2 = this.Rand.NextDouble() * sommeInverses;
-                double temp = 0;
-                int index = 0;
-
-                while (parent1 == null || parent2 == null)
+                for (int indexCouple = 0; indexCouple < couples.Length; indexCouple++)
                 {
-                    temp += sommeValeurs / this.individus[index].Valeur;
+                    Individu parent1 = null;
+                    Individu parent2 = null;
 
-                    if (parent1 == null && temp > rand1)
+                    double tirageParent1 = this.Rand.NextDouble();
+                    double tirageParent2 = this.Rand.NextDouble();
+                    double sommeProbaParents = 0;
+                    int index = 0;
+
+                    while (parent1 == null || parent2 == null)
                     {
-                        parent1 = this.individus[index];
+                        sommeProbaParents += (valeurMax - this.individus[index].Valeur) / sommeDiff;
+
+                        if (parent1 == null && sommeProbaParents > tirageParent1)
+                        {
+                            parent1 = this.individus[index];
+                        }
+
+                        if (parent2 == null && sommeProbaParents > tirageParent2)
+                        {
+                            parent2 = this.individus[index];
+                        }
+
+                        index++;
                     }
 
-                    if (parent2 == null && temp > rand2)
-                    {
-                        parent2 = this.individus[index];
-                    }
-
-                    index++;
+                    couples[indexCouple] = new[] { parent1, parent2 };
                 }
-
-                couples[i] = new[] { parent1, parent2 };
+            }
+            else
+            {
+                couples = Enumerable.Repeat(new[] { this.individus[0], this.individus[0] }, couples.Length).ToArray();
             }
 
             return couples;
@@ -142,42 +149,39 @@ namespace AlgoGenetiqueDemo
         {
             IEnumerable<Individu>[] couples = new IEnumerable<Individu>[this.individus.Length];
 
-            double sommeRangs = this.individus.Length * (this.individus.Length + 1d) / 2d;
-            double sommeInverses = 0;
+            double rangMax = this.individus.Length;
+            double sommeDiff = (this.individus.Length * this.individus.Length) - (this.individus.Length * (this.individus.Length + 1) / 2d);
 
-            for (int i = 0; i < this.individus.Length; i++)
-            {
-                sommeInverses += sommeRangs / (i + 1d);
-            }
+            Individu[] individusSorted = this.individus.OrderBy(individu => individu.Valeur).ToArray();
 
-            for (int i = 0; i < this.individus.Length; i++)
+            for (int indexCouple = 0; indexCouple < couples.Length; indexCouple++)
             {
                 Individu parent1 = null;
                 Individu parent2 = null;
 
-                double rand1 = this.Rand.NextDouble() * sommeInverses;
-                double rand2 = this.Rand.NextDouble() * sommeInverses;
-                double temp = 0;
+                double tirageParent1 = this.Rand.NextDouble();
+                double tirageParent2 = this.Rand.NextDouble();
+                double sommeProbaParents = 0;
                 int index = 0;
 
                 while (parent1 == null || parent2 == null)
                 {
-                    temp += sommeRangs / (index + 1);
+                    sommeProbaParents += (rangMax - index + 1) / sommeDiff;
 
-                    if (parent1 == null && temp > rand1)
+                    if (parent1 == null && sommeProbaParents > tirageParent1)
                     {
-                        parent1 = this.individus[index];
+                        parent1 = individusSorted[index];
                     }
 
-                    if (parent2 == null && temp > rand2)
+                    if (parent2 == null && sommeProbaParents > tirageParent2)
                     {
-                        parent2 = this.individus[index];
+                        parent2 = individusSorted[index];
                     }
 
                     index++;
                 }
 
-                couples[i] = new[] { parent1, parent2 };
+                couples[indexCouple] = new[] { parent1, parent2 };
             }
 
             return couples;
@@ -226,25 +230,23 @@ namespace AlgoGenetiqueDemo
         /// <summary>
         /// Exécute des mutations sur les gènes des individus.
         /// </summary>
-        /// <param name="probabilite">Probabilité qu'une mutation se produise sur un gène.</param>
+        /// <param name="probabilite">Probabilité qu'une mutation se produise sur un individu.</param>
         public void Mutation(double probabilite)
         {
             // pour chaque individu.
             for (int indexIndividu = 0; indexIndividu < this.individus.Length; indexIndividu++)
             {
-                // Pour chaque gène de cet individu.
-                for (int indexGene1 = 0; indexGene1 < this.individus[indexIndividu].Points.Length; indexGene1++)
+                // Si l'individu est tiré au sort, deux de ses gènes sont échangés.
+                if (this.Rand.NextDouble() < probabilite)
                 {
-                    // Effectue une mutation si la valeur tirée au sort est inférieure à la probabilité.
-                    if (this.Rand.NextDouble() < probabilite)
-                    {
-                        int indexGene2 = this.Rand.Next(0, this.individus[indexIndividu].Points.Length);
-                        Point gene1 = this.individus[indexIndividu].Points[indexGene1];
-                        Point gene2 = this.individus[indexIndividu].Points[indexGene2];
+                    int indexGene1 = this.Rand.Next(0, this.individus[indexIndividu].Points.Length);
+                    int indexGene2 = this.Rand.Next(0, this.individus[indexIndividu].Points.Length);
 
-                        this.individus[indexIndividu].Points[indexGene1] = gene2;
-                        this.individus[indexIndividu].Points[indexGene2] = gene1;
-                    }
+                    Point gene1 = this.individus[indexIndividu].Points[indexGene1];
+                    Point gene2 = this.individus[indexIndividu].Points[indexGene2];
+
+                    this.individus[indexIndividu].Points[indexGene1] = gene2;
+                    this.individus[indexIndividu].Points[indexGene2] = gene1;
                 }
             }
         }
