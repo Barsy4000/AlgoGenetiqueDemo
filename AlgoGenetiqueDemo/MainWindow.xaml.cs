@@ -24,6 +24,16 @@ namespace AlgoGenetiqueDemo
         public const int MARGE = 10;
 
         /// <summary>
+        /// Largeur de la zone du voyageur de commerce.
+        /// </summary>
+        private const int VOYAGEUR_AREA_WIDTH = 1500;
+
+        /// <summary>
+        /// Hauteur de la zone du voyageur de commerce.
+        /// </summary>
+        private const int VOYAGEUR_AREA_HEIGHT = 1000;
+
+        /// <summary>
         /// Taille d'affichage de chaque points.
         /// </summary>
         public const int TaillePoint = 7;
@@ -89,6 +99,21 @@ namespace AlgoGenetiqueDemo
         }
 
         /// <summary>
+        /// Evenement déclenché lors du redimensionnement de la fenêtre.
+        /// </summary>
+        /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
+        /// <param name="e">Informations sur l'évènement.</param>
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (this.voyageurCommerce != null)
+            {
+                this.cnvDrawZone.Children.Clear();
+                this.DrawIndividu(this.voyageurCommerce.MeilleurIndividu);
+                this.DrawVoyageurCommerce();
+            }
+        }
+
+        /// <summary>
         /// Clic sur le bouton de génération d'un nouveau parcours.
         /// </summary>
         /// <param name="sender">Contrôle dans lequel se déclenche l'évènement.</param>
@@ -105,8 +130,8 @@ namespace AlgoGenetiqueDemo
                 return;
             }
 
-            int xMax = (int)this.cnvDrawZone.ActualWidth - MARGE;
-            int yMax = (int)this.cnvDrawZone.ActualHeight - MARGE;
+            int xMax = VOYAGEUR_AREA_WIDTH;
+            int yMax = VOYAGEUR_AREA_HEIGHT;
 
             this.voyageurCommerce = new VoyageurCommerce(nombrePoints, MARGE, xMax, MARGE, yMax);
             this.voyageurCommerce.UpdateMeilleurIndividu += this.VoyageurCommerce_UpdateMeilleurIndividu;
@@ -158,13 +183,16 @@ namespace AlgoGenetiqueDemo
 
             foreach (Point pointPassage in this.voyageurCommerce.PointsPassage)
             {
+                double x = (this.cnvDrawZone.ActualWidth / (double)VOYAGEUR_AREA_WIDTH) * pointPassage.X;
+                double y = (this.cnvDrawZone.ActualHeight / (double)VOYAGEUR_AREA_HEIGHT) * pointPassage.Y;
+
                 Ellipse ellipse = new Ellipse();
                 SolidColorBrush mySolidColorBrush = new SolidColorBrush(couleurPoint);
                 ellipse.Fill = mySolidColorBrush;
                 ellipse.Width = TaillePoint;
                 ellipse.Height = TaillePoint;
-                Canvas.SetLeft(ellipse, pointPassage.X - (TaillePoint / 2));
-                Canvas.SetTop(ellipse, pointPassage.Y - (TaillePoint / 2));
+                Canvas.SetLeft(ellipse, x - (TaillePoint / 2));
+                Canvas.SetTop(ellipse, y - (TaillePoint / 2));
                 this.cnvDrawZone.Children.Add(ellipse);
 
                 couleurPoint = Colors.Black;
@@ -201,10 +229,10 @@ namespace AlgoGenetiqueDemo
         {
             Line lineFirst = new Line();
             lineFirst.Stroke = Brushes.LightCoral;
-            lineFirst.X1 = point1.X;
-            lineFirst.X2 = point2.X;
-            lineFirst.Y1 = point1.Y;
-            lineFirst.Y2 = point2.Y;
+            lineFirst.X1 = (this.cnvDrawZone.ActualWidth / (double)VOYAGEUR_AREA_WIDTH) * point1.X;
+            lineFirst.Y1 = (this.cnvDrawZone.ActualHeight / (double)VOYAGEUR_AREA_HEIGHT) * point1.Y;
+            lineFirst.X2 = (this.cnvDrawZone.ActualWidth / (double)VOYAGEUR_AREA_WIDTH) * point2.X;
+            lineFirst.Y2 = (this.cnvDrawZone.ActualHeight / (double)VOYAGEUR_AREA_HEIGHT) * point2.Y;
             lineFirst.StrokeThickness = EpaisseurLigne;
             this.cnvDrawZone.Children.Add(lineFirst);
         }
